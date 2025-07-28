@@ -1,45 +1,57 @@
-	package com.spring.boot.doctor.booking.ENTITY;
-	
-	
-	
-	import jakarta.persistence.*;
-	import lombok.Data;
-	
-	import java.time.LocalDateTime;
-	
-	
-	@Data
-	@Entity
-	@Table(name = "appointments")
-	public class Appointment {
-	
-	    @Id
-	    @GeneratedValue(strategy = GenerationType.IDENTITY)
-	    private Long id;
-	
-	    @ManyToOne
-	    @JoinColumn(name = "doctor_id")
-	    private Doctor doctor;
-	
-	    @ManyToOne
-	    @JoinColumn(name = "patient_id")
-	    private Patient patient;
-	
-	    private LocalDateTime scheduledDateTime;
-	
-	    @Enumerated(EnumType.STRING)
-	    private Type type;
-	
-	    @Enumerated(EnumType.STRING)
-	    private Status status = Status.PENDING;
-	
-	    public enum Type {
-	        HOME_VISIT, ONLINE
-	    }
-	
-	    public enum Status {
-	        PENDING, ACCEPTED, REJECTED, COMPLETED
-	    }
-	
-	    // Getters and Setters
-	}
+package com.spring.boot.doctor.booking.ENTITY;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
+@Entity
+@Table(name = "appointments")
+public class Appointment {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Patient patient;
+
+    private LocalDateTime scheduledDateTime;
+
+    @Enumerated(EnumType.STRING)
+    private Type type;
+
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.PENDING;
+
+    @Column(length = 1000)
+    private String notes;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public enum Type {
+        HOME_VISIT, ONLINE,homevisit,HomeVisithomeVisit,online,clinic,CLINIC
+    }
+
+    public enum Status {
+        PENDING, ACCEPTED, REJECTED, COMPLETED, CANCELLED,pending,accepted,rejected,completed,cancelled,Pending,Accepted,Rejected,Completed,Cancelled
+    }
+}

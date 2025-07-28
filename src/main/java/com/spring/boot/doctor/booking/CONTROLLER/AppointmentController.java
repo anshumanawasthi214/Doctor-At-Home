@@ -1,13 +1,14 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.spring.boot.doctor.booking.DTOs.AppointmentRequestDto;
+import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
+import com.spring.boot.doctor.booking.ENTITY.Appointment;
 
 import com.spring.boot.doctor.booking.SERVICE.AppointmentService;
-import com.spring.boot.doctor.bookingDTOs.AppointmentRequestDto;
-import com.spring.boot.doctor.bookingDTOs.AppointmentResponseDto;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,27 +19,38 @@ public class AppointmentController {
     @Autowired
     private AppointmentService appointmentService;
 
+    // Book new appointment
     @PostMapping("/book")
     public ResponseEntity<AppointmentResponseDto> bookAppointment(@RequestBody AppointmentRequestDto dto) {
         return ResponseEntity.ok(appointmentService.bookAppointment(dto));
     }
 
-    @PutMapping("/{appointmentId}/status")
-    public ResponseEntity<String> updateStatus(
+    // Get appointment by ID
+    @GetMapping("/get/{appointmentId}")
+    public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable Long appointmentId) {
+        return ResponseEntity.ok(appointmentService.getAppointmentById(appointmentId));
+    }
+
+    // Get all appointments for a patient
+    @GetMapping("/all/patient/{patientId}")
+    public ResponseEntity<List<AppointmentResponseDto>> getAppointmentsByPatient(@PathVariable Long patientId) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsByPatient(patientId));
+    }
+
+    // Update appointment status or details (e.g., reschedule)
+    @PutMapping("/update/{appointmentId}")
+    public ResponseEntity<AppointmentResponseDto> updateAppointment(
             @PathVariable Long appointmentId,
-            @RequestParam String status) {
-        appointmentService.updateAppointmentStatus(appointmentId, status);
-        return ResponseEntity.ok("Appointment status updated to: " + status);
+            @RequestBody AppointmentRequestDto dto) {
+        return ResponseEntity.ok(appointmentService.updateAppointment(appointmentId, dto));
     }
 
-    @GetMapping("/doctor/{doctorId}/history")
-    public ResponseEntity<List<AppointmentResponseDto>> getDoctorBookingHistory(@PathVariable Long doctorId) {
-        return ResponseEntity.ok(appointmentService.getDoctorBookingHistory(doctorId));
+    // Cancel appointment (delete)
+    @DeleteMapping("/delete/{appointmentId}")
+    public ResponseEntity<Void> cancelAppointment(@PathVariable Long appointmentId) {
+        appointmentService.cancelAppointment(appointmentId);
+        return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/patient/{patientId}/history")
-    public ResponseEntity<List<AppointmentResponseDto>> getPatientBookingHistory(@PathVariable Long patientId) {
-        return ResponseEntity.ok(appointmentService.getPatientBookingHistory(patientId));
-    }
+    
+   
 }
-

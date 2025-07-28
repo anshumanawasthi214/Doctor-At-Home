@@ -1,4 +1,4 @@
-package com.spring.boot.doctor.bookingDTOs;
+package com.spring.boot.doctor.booking.DTOs;
 
 import java.time.LocalDateTime;
 

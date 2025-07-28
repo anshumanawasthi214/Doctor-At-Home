@@ -1,17 +1,18 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
+import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
+import com.spring.boot.doctor.booking.DTOs.DoctorRequestDto;
+import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
+import com.spring.boot.doctor.booking.ENTITY.Appointment;
+import com.spring.boot.doctor.booking.SERVICE.AppointmentService;
+import com.spring.boot.doctor.booking.SERVICE.DoctorService;
+
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.spring.boot.doctor.booking.SERVICE.DoctorService;
-import com.spring.boot.doctor.bookingDTOs.AppointMentResponseListDto;
-import com.spring.boot.doctor.bookingDTOs.DoctorAvailabilityUpdateDto;
-import com.spring.boot.doctor.bookingDTOs.DoctorRequestDto;
-import com.spring.boot.doctor.bookingDTOs.DoctorResponseDto;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/doctors")
@@ -19,29 +20,58 @@ public class DoctorController {
 
     @Autowired
     private DoctorService doctorService;
+    
+    @Autowired
+    private AppointmentService appointmentService;
 
-    @PostMapping("/register")
+    // Register doctor
+    @PostMapping("/new/register")
     public ResponseEntity<DoctorResponseDto> registerDoctor(@RequestBody DoctorRequestDto dto) {
+    	System.out.println(dto);
         return ResponseEntity.ok(doctorService.registerDoctor(dto));
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<DoctorResponseDto>> searchDoctors(
-            @RequestParam String specialization,
-            @RequestParam String location) {
-        return ResponseEntity.ok(doctorService.searchDoctors(specialization, location));
+    // Get doctor by ID
+    @GetMapping("/get/{doctorId}")
+    public ResponseEntity<DoctorResponseDto> getDoctorById(@PathVariable Long doctorId) {
+        return ResponseEntity.ok(doctorService.getDoctorById(doctorId));
     }
 
-    @PutMapping("/{doctorId}/availability")
-    public ResponseEntity<String> updateAvailability(
+
+    // Update doctor details
+    @PutMapping("/update/{doctorId}")
+    public ResponseEntity<DoctorResponseDto> updateDoctor(
             @PathVariable Long doctorId,
-            @RequestBody DoctorAvailabilityUpdateDto dto) {
-        doctorService.updateAvailabilityStatus(doctorId, dto.getAvailabilityStatus());
-        return ResponseEntity.ok("Doctor availability updated to: " + dto.getAvailabilityStatus());
+            @RequestBody DoctorRequestDto dto) {
+        return ResponseEntity.ok(doctorService.updateDoctor(doctorId, dto));
+    }
+
+    // Delete doctor
+    @DeleteMapping("/delete/{doctorId}")
+    public ResponseEntity<Void> deleteDoctor(@PathVariable Long doctorId) {
+        doctorService.deleteDoctor(doctorId);
+        return ResponseEntity.noContent().build();
     }
     
-    @GetMapping("/check/appointments/{doctorId}")
-    public ResponseEntity<List<AppointMentResponseListDto>> checkAppointmentsRequest(@PathVariable Long doctorId) {
-    	return ResponseEntity.ok(doctorService.checkAppointmentsRequests(doctorId));
+    //Get all appointment Requests
+    @GetMapping("/all/doctor/{doctorId}")
+    public ResponseEntity<List<AppointmentResponseDto>> getAppointmentsByDoctor(@PathVariable Long doctorId) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsByDoctor(doctorId));
+    }
+    
+    //Change appointment status
+    @PutMapping("/change/{appointmentId}/status")
+    public ResponseEntity<String> changeAppointmentStatus(
+    									  @PathVariable Long appointmentId,
+    									  @RequestParam String statusString) {
+    	
+    	   Appointment.Status status;
+           try {
+               status = Appointment.Status.valueOf(statusString.toUpperCase());
+           } catch (IllegalArgumentException e) {
+               return ResponseEntity.badRequest().body("Invalid status: " + statusString);
+           }
+    	String result=appointmentService.changeAppointmentStatus(appointmentId,status);
+    	return ResponseEntity.ok(result);
     }
 }

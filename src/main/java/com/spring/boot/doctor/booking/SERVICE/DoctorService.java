@@ -1,23 +1,32 @@
 package com.spring.boot.doctor.booking.SERVICE;
 
+
+
+
 import java.util.List;
 
-import com.spring.boot.doctor.booking.DOCTOR.ADMIN.DTO.DoctorAdminDto;
+import com.spring.boot.doctor.booking.DTOs.DoctorAdminDto;
+import com.spring.boot.doctor.booking.DTOs.DoctorRequestDto;
+import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
-import com.spring.boot.doctor.bookingDTOs.AppointMentResponseListDto;
-import com.spring.boot.doctor.bookingDTOs.DoctorRequestDto;
-import com.spring.boot.doctor.bookingDTOs.DoctorResponseDto;
+import com.spring.boot.doctor.booking.ENTITY.Doctor.Status;
 
 public interface DoctorService {
 
     DoctorResponseDto registerDoctor(DoctorRequestDto dto);
 
-    List<DoctorResponseDto> searchDoctors(String specialization, String location);
+    DoctorResponseDto getDoctorById(Long doctorId);
 
-    void updateAvailabilityStatus(Long doctorId, String status);
+    DoctorResponseDto updateDoctor(Long doctorId, DoctorRequestDto dto);
+
+    void deleteDoctor(Long doctorId);
     
-    List<DoctorAdminDto> getAllDoctorsForAdmin();
-    void updateDoctorStatus(Long doctorId, Doctor.Status status);
+	List<DoctorAdminDto> getAllDoctorsForAdmin();
 
-	List<AppointMentResponseListDto> checkAppointmentsRequests(Long doctorId);
+	void updateDoctorStatus(Long id, Status status);
+
+	List<Doctor> searchDoctorsWithFilters(Long id, String name, String specialization, String location,
+            Double minFee, Double maxFee, Double minRatings,
+            Integer experience, String languages, String availability);
+
 }

@@ -1,18 +1,24 @@
 package com.spring.boot.doctor.booking.SERVICE;
 
+import com.spring.boot.doctor.booking.DTOs.AppointmentRequestDto;
+import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
+import com.spring.boot.doctor.booking.ENTITY.Appointment.Status;
 
 import java.util.List;
-
-import com.spring.boot.doctor.bookingDTOs.AppointmentRequestDto;
-import com.spring.boot.doctor.bookingDTOs.AppointmentResponseDto;
 
 public interface AppointmentService {
 
     AppointmentResponseDto bookAppointment(AppointmentRequestDto dto);
 
-    void updateAppointmentStatus(Long appointmentId, String status);
+    AppointmentResponseDto getAppointmentById(Long appointmentId);
 
-    List<AppointmentResponseDto> getDoctorBookingHistory(Long doctorId);
+    List<AppointmentResponseDto> getAppointmentsByDoctor(Long doctorId);
 
-    List<AppointmentResponseDto> getPatientBookingHistory(Long patientId);
+    List<AppointmentResponseDto> getAppointmentsByPatient(Long patientId);
+
+    AppointmentResponseDto updateAppointment(Long appointmentId, AppointmentRequestDto dto);
+
+    void cancelAppointment(Long appointmentId);
+
+	String changeAppointmentStatus(Long appointmentId, Status status);
 }

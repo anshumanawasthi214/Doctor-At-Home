@@ -1,19 +1,17 @@
 package com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION;
 
+import com.spring.boot.doctor.booking.DTOs.MedicalDocumentResponseDto;
+import com.spring.boot.doctor.booking.ENTITY.MedicalDocument;
+import com.spring.boot.doctor.booking.ENTITY.Patient;
+import com.spring.boot.doctor.booking.REPOSITORY.MedicalDocumentRepository;
+import com.spring.boot.doctor.booking.REPOSITORY.PatientRepository;
+import com.spring.boot.doctor.booking.SERVICE.MedicalDocumentService;
 
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-
-import com.spring.boot.doctor.booking.ENTITY.MedicalDocument;
-import com.spring.boot.doctor.booking.ENTITY.Patient;
-import com.spring.boot.doctor.booking.REPOSITORY.MedicalDocumentRepository;
-import com.spring.boot.doctor.booking.REPOSITORY.PatientRepository;
-import com.spring.boot.doctor.booking.SERVICE.MedicalDocumentService;
-import com.spring.boot.doctor.bookingDTOs.MedicalDocumentResponseDto;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -24,7 +22,7 @@ import java.util.stream.Collectors;
 public class MedicalDocumentServiceImpl implements MedicalDocumentService {
 
     @Autowired
-    private MedicalDocumentRepository documentRepository;
+    private MedicalDocumentRepository medicalDocumentRepository;
 
     @Autowired
     private PatientRepository patientRepository;
@@ -32,38 +30,44 @@ public class MedicalDocumentServiceImpl implements MedicalDocumentService {
     @Override
     public void uploadDocument(Long patientId, MultipartFile file) {
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Patient not found"));
-        try {
-            MedicalDocument document = new MedicalDocument();
-            document.setFileName(file.getOriginalFilename());
-            document.setFileType(file.getContentType());
-            document.setData(file.getBytes());
-            document.setUploadDate(LocalDateTime.now());
-            document.setPatient(patient);
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id " + patientId));
 
-            documentRepository.save(document);
+        MedicalDocument document = new MedicalDocument();
+        document.setFileName(file.getOriginalFilename());
+        document.setFileType(file.getContentType());
+        try {
+            document.setData(file.getBytes());
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+            throw new RuntimeException("Failed to read file data", e);
         }
+        document.setUploadDate(LocalDateTime.now());
+        document.setPatient(patient);
+
+        medicalDocumentRepository.save(document);
     }
 
     @Override
     public List<MedicalDocumentResponseDto> getDocumentsByPatient(Long patientId) {
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Patient not found"));
-        List<MedicalDocument> documents = documentRepository.findByPatient(patient);
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id " + patientId));
+
+        List<MedicalDocument> documents = medicalDocumentRepository.findByPatient(patient);
         return documents.stream()
-                .map(this::mapToResponseDto)
-                .collect(Collectors.toList());
+        .map(doc -> new MedicalDocumentResponseDto(
+                doc.getId(),
+                doc.getFileName(),
+                doc.getFileType(),
+                doc.getUploadDate(),
+                doc.getCreatedAt(),
+                doc.getUpdatedAt(),
+                doc.getPatient().getId()))
+        .collect(Collectors.toList());
     }
 
-    private MedicalDocumentResponseDto mapToResponseDto(MedicalDocument document) {
-        MedicalDocumentResponseDto dto = new MedicalDocumentResponseDto();
-        dto.setId(document.getId());
-        dto.setFileName(document.getFileName());
-        dto.setFileType(document.getFileType());
-        dto.setUploadDate(document.getUploadDate());
-        dto.setPatientId(document.getPatient().getId());
-        return dto;
+    @Override
+    public void deleteDocument(Long documentId) {
+        MedicalDocument document = medicalDocumentRepository.findById(documentId)
+                .orElseThrow(() -> new EntityNotFoundException("Document not found with id " + documentId));
+        medicalDocumentRepository.delete(document);
     }
 }

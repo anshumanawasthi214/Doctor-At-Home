@@ -1,14 +1,12 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
+import com.spring.boot.doctor.booking.DTOs.MedicalDocumentResponseDto;
+import com.spring.boot.doctor.booking.SERVICE.MedicalDocumentService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.spring.boot.doctor.booking.SERVICE.MedicalDocumentService;
-import com.spring.boot.doctor.bookingDTOs.MedicalDocumentResponseDto;
 
 import java.util.List;
 
@@ -19,15 +17,25 @@ public class MedicalDocumentController {
     @Autowired
     private MedicalDocumentService documentService;
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadDocument(@RequestParam("file") MultipartFile file,
-                                                 @RequestParam Long patientId) {
+    // Upload document for a patient
+    @PostMapping("/upload/{patientId}")
+    public ResponseEntity<Void> uploadDocument(
+            @PathVariable Long patientId,
+            @RequestParam("file") MultipartFile file) {
         documentService.uploadDocument(patientId, file);
-        return ResponseEntity.ok("Document uploaded successfully");
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/patient/{patientId}")
+    // Get documents by patient ID
+    @GetMapping("/get/patient/{patientId}")
     public ResponseEntity<List<MedicalDocumentResponseDto>> getDocumentsByPatient(@PathVariable Long patientId) {
         return ResponseEntity.ok(documentService.getDocumentsByPatient(patientId));
+    }
+
+    // Delete document by ID (optional, if implemented)
+    @DeleteMapping("/delete/{documentId}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long documentId) {
+        documentService.deleteDocument(documentId);
+        return ResponseEntity.noContent().build();
     }
 }

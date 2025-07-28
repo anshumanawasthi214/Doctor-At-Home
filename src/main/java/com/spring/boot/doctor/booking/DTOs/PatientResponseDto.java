@@ -1,54 +1,23 @@
-package com.spring.boot.doctor.booking.ENTITY;
-
-import jakarta.persistence.*;
-import lombok.Data;
+package com.spring.boot.doctor.booking.DTOs;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
-@Entity
-@Table(name = "patients")
-public class Patient {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class PatientResponseDto {
     private Long id;
-
     private String name;
-
     private String email;
-
     private String phone;
-
     private String address;
-
     private LocalDate dateOfBirth;
-
     private String gender;
-
     private String emergencyContact;
-
-    @Column(length = 1000)
     private String medicalHistory;
-
     private String bloodGroup;
-
     private String allergies;
-
     private String profilePicture;
-
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
