@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class PatientRequestDto {
+
     private String name;
     private String email;
     private String phone;
@@ -16,4 +17,6 @@ public class PatientRequestDto {
     private String bloodGroup;
     private String allergies;
     private String profilePicture;
+
+    private Long userId; // Fo
 }

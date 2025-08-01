@@ -5,6 +5,7 @@ import com.spring.boot.doctor.booking.SERVICE.MedicalDocumentService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +28,7 @@ public class MedicalDocumentController {
     }
 
     // Get documents by patient ID
+    @PostAuthorize("returnObject.performedBy==authentication.name")
     @GetMapping("/get/patient/{patientId}")
     public ResponseEntity<List<MedicalDocumentResponseDto>> getDocumentsByPatient(@PathVariable Long patientId) {
         return ResponseEntity.ok(documentService.getDocumentsByPatient(patientId));

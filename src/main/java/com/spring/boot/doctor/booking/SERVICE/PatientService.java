@@ -8,16 +8,10 @@ import com.spring.boot.doctor.booking.DTOs.PatientRequestDto;
 import com.spring.boot.doctor.booking.DTOs.PatientResponseDto;
 
 public interface PatientService {
-
     PatientResponseDto registerPatient(PatientRequestDto dto);
-
-    PatientResponseDto getPatientById(Long patientId);
-
-    PatientResponseDto updatePatient(Long patientId, PatientRequestDto dto);
-
-    void deletePatient(Long patientId);
-
-    List<AppointmentResponseDto> getBookingHistory(Long patientId);
-
+    PatientResponseDto getPatientByUserId(Long userId);
+    PatientResponseDto updatePatientByUserId(Long userId, PatientRequestDto dto);
+    void deletePatientByUserId(Long userId);
+    List<AppointmentResponseDto> getBookingHistoryByUserId(Long userId);
     List<PatientAdminDto> getAllPatientsForAdmin();
 }

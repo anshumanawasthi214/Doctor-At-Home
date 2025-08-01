@@ -1,6 +1,7 @@
 package com.spring.boot.doctor.booking;
 
 import org.springframework.boot.SpringApplication;
+
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication

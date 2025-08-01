@@ -48,10 +48,10 @@ public class Appointment {
     }
 
     public enum Type {
-        HOME_VISIT, ONLINE,homevisit,HomeVisithomeVisit,online,clinic,CLINIC
+        HOME_VISIT, ONLINE,CLINIC
     }
 
     public enum Status {
-        PENDING, ACCEPTED, REJECTED, COMPLETED, CANCELLED,pending,accepted,rejected,completed,cancelled,Pending,Accepted,Rejected,Completed,Cancelled
+        PENDING, ACCEPTED, REJECTED, COMPLETED, CANCELLED
     }
 }

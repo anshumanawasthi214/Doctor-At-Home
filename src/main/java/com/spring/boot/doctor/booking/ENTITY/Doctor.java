@@ -16,6 +16,7 @@ public class Doctor {
 
     private String name;
 
+   
     private String email;
 
     private String phone;
@@ -64,10 +65,12 @@ public class Doctor {
     }
 
     public enum Status {
-        PENDING, APPROVED, REJECTED,pending,approved,rejected
+        PENDING, APPROVED, REJECTED,
     }
 
     public enum AvailabilityStatus {
-        ACTIVE, LEAVE, UNAVAILABLE, NO, YES, AVAILABLE,active,leave,unavailable,no,yes,available
+        ACTIVE, LEAVE, UNAVAILABLE, NO, YES, AVAILABLE,
     }
+    
+
 }

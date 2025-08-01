@@ -1,21 +1,15 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
-import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
-
 import com.spring.boot.doctor.booking.DTOs.PatientRequestDto;
 import com.spring.boot.doctor.booking.DTOs.PatientResponseDto;
-import com.spring.boot.doctor.booking.ENTITY.Doctor;
-import com.spring.boot.doctor.booking.Mapper.DoctorMapper;
-import com.spring.boot.doctor.booking.SERVICE.DoctorService;
-
 import com.spring.boot.doctor.booking.SERVICE.PatientService;
+import com.spring.boot.doctor.booking.UTIL.JWTUtil;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -23,69 +17,50 @@ public class PatientController {
 
     @Autowired
     private PatientService patientService;
-    @Autowired
-    private DoctorService doctorService;
-    
-    @Autowired
-    private DoctorMapper doctorMapper;
 
-    // Create/Register new patient
+    @Autowired
+    private JWTUtil jwtUtil;
+
     @PostMapping("/register")
     public ResponseEntity<PatientResponseDto> registerPatient(@RequestBody PatientRequestDto dto) {
+    	System.out.println(dto);
         return ResponseEntity.ok(patientService.registerPatient(dto));
     }
 
-    // Get patient by ID
-    @GetMapping("/get/{patientId}")
-    public ResponseEntity<PatientResponseDto> getPatientById(@PathVariable Long patientId) {
-        return ResponseEntity.ok(patientService.getPatientById(patientId));
-    }
-    // Update patient details
-    @PutMapping("/update/{patientId}")
-    public ResponseEntity<PatientResponseDto> updatePatient(
-            @PathVariable Long patientId,
-            @RequestBody PatientRequestDto dto) {
-        return ResponseEntity.ok(patientService.updatePatient(patientId, dto));
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> getPatient(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(patientService.getPatientByUserId(id));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
-    // Delete patient
-    @DeleteMapping("/delete/{patientId}")
-    public ResponseEntity<Void> deletePatient(@PathVariable Long patientId) {
-        patientService.deletePatient(patientId);
+    @PutMapping("/update")
+    public ResponseEntity<?> updatePatient(@RequestBody PatientRequestDto dto, HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        return ResponseEntity.ok(patientService.updatePatientByUserId(userId, dto));
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deletePatient(HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        patientService.deletePatientByUserId(userId);
         return ResponseEntity.noContent().build();
     }
 
-    // Get booking/appointment history
-    @GetMapping("/history/{patientId}/appointments")
-    public ResponseEntity<?> getBookingHistory(@PathVariable Long patientId) {
-        return ResponseEntity.ok(patientService.getBookingHistory(patientId));
-    }
-    
-
-    // Search doctors with filters
-    @GetMapping("/doctors/search")
-    public ResponseEntity<List<DoctorResponseDto>> searchDoctors(
-            @RequestParam(required = false) Double minFee,
-            @RequestParam(required = false) Double maxFee,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) String specialization,
-            @RequestParam(required = false) Double minRatings,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long id,
-            @RequestParam(required = false) Integer experience,
-            @RequestParam(required = false) String languages,
-            @RequestParam(required = false) String availability // availability string like "Mon-Fri"
-    ) {
-        List<Doctor> doctors = doctorService.searchDoctorsWithFilters(
-                id, name, specialization, location, minFee, maxFee, minRatings,
-                experience, languages, availability
-        );
-
-        List<DoctorResponseDto> response = doctors.stream()
-                .map(doctorMapper::toDto)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(response);
+    @GetMapping("/history/appointments")
+    public ResponseEntity<?> getBookingHistory(HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        return ResponseEntity.ok(patientService.getBookingHistoryByUserId(userId));
     }
 
+    private Long getUserIdFromRequest(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            return jwtUtil.extractUserId(token);
+        }
+        return null;
+    }
 }

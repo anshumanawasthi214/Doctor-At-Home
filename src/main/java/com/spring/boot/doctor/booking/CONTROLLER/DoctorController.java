@@ -25,7 +25,7 @@ public class DoctorController {
     private AppointmentService appointmentService;
 
     // Register doctor
-    @PostMapping("/new/register")
+    @PostMapping("/register")
     public ResponseEntity<DoctorResponseDto> registerDoctor(@RequestBody DoctorRequestDto dto) {
     	System.out.println(dto);
         return ResponseEntity.ok(doctorService.registerDoctor(dto));

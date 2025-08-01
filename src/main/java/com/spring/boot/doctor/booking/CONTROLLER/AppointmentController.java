@@ -1,10 +1,12 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
 import com.spring.boot.doctor.booking.DTOs.AppointmentRequestDto;
+
 import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
-import com.spring.boot.doctor.booking.ENTITY.Appointment;
 
 import com.spring.boot.doctor.booking.SERVICE.AppointmentService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
