@@ -7,4 +7,5 @@ public interface UserService {
     ResponseUserDetails registerUser(RegisterUserRequest userRequest);
     ResponseUserDetails getUserDetailsByUsername(String username);
 	String deletePatientByUserId(Long userId);
+	String deleteDoctorByUserId(Long userId);
 }

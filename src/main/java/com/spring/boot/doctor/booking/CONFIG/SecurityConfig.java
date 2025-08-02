@@ -37,7 +37,7 @@ public class SecurityConfig {
         		    "/authenticate",
         		    "/user/register/doctor",
         		    "/user/register/patient",
-        		    "/user/check","/api/doctor/seacrh")
+        		    "/user/check","/api/doctors/search","/api/doctors/get/{id}")
         	.permitAll()
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .requestMatchers("/api/doctor/**").hasRole("DOCTOR")

@@ -53,6 +53,10 @@ public class Doctor {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private Users user;
 
     @PrePersist
     protected void onCreate() {

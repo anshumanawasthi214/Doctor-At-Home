@@ -16,5 +16,5 @@ public class DoctorRequestDto {
     private String profilePicture;
     private String languages;              // comma-separated or however you handle
     private String about;
-    private String specialties;            // consider JSON string or comma-separated
+    private String specialties;  // consider JSON string or comma-separated
 }
