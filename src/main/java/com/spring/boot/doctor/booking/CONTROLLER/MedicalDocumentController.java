@@ -2,10 +2,8 @@ package com.spring.boot.doctor.booking.CONTROLLER;
 
 import com.spring.boot.doctor.booking.DTOs.MedicalDocumentResponseDto;
 import com.spring.boot.doctor.booking.SERVICE.MedicalDocumentService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,26 +16,30 @@ public class MedicalDocumentController {
     @Autowired
     private MedicalDocumentService documentService;
 
-    // Upload document for a patient
-    @PostMapping("/upload/{patientId}")
-    public ResponseEntity<Void> uploadDocument(
-            @PathVariable Long patientId,
-            @RequestParam("file") MultipartFile file) {
-        documentService.uploadDocument(patientId, file);
+    @PostMapping("/upload")
+    public ResponseEntity<Void> uploadDocument(@RequestParam("file") MultipartFile file) {
+        documentService.uploadDocument(file);
         return ResponseEntity.ok().build();
     }
 
-    // Get documents by patient ID
-    @PostAuthorize("returnObject.performedBy==authentication.name")
-    @GetMapping("/get/patient/{patientId}")
-    public ResponseEntity<List<MedicalDocumentResponseDto>> getDocumentsByPatient(@PathVariable Long patientId) {
-        return ResponseEntity.ok(documentService.getDocumentsByPatient(patientId));
+    @GetMapping("/my-documents")
+    public ResponseEntity<List<MedicalDocumentResponseDto>> getDocumentsOfCurrentPatient() {
+        return ResponseEntity.ok(documentService.getDocumentsOfCurrentPatient());
     }
 
-    // Delete document by ID (optional, if implemented)
+    @PutMapping("/update/{documentId}")
+    public ResponseEntity<Void> updateDocument(
+            @PathVariable Long documentId,
+            @RequestParam("file") MultipartFile file) {
+        documentService.updateDocument(documentId, file);
+        return ResponseEntity.ok().build();
+    }
+
+    
+    
     @DeleteMapping("/delete/{documentId}")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long documentId) {
         documentService.deleteDocument(documentId);
         return ResponseEntity.noContent().build();
-    }
+    }	
 }

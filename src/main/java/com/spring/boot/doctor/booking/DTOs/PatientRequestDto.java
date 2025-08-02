@@ -17,6 +17,4 @@ public class PatientRequestDto {
     private String bloodGroup;
     private String allergies;
     private String profilePicture;
-
-    private Long userId; // Fo
-}
+    }

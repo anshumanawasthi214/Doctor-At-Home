@@ -9,7 +9,7 @@ import com.spring.boot.doctor.booking.DTOs.PatientResponseDto;
 
 public interface PatientService {
     PatientResponseDto registerPatient(PatientRequestDto dto);
-    PatientResponseDto getPatientByUserId(Long userId);
+    PatientResponseDto getCurrentPatient();
     PatientResponseDto updatePatientByUserId(Long userId, PatientRequestDto dto);
     void deletePatientByUserId(Long userId);
     List<AppointmentResponseDto> getBookingHistoryByUserId(Long userId);

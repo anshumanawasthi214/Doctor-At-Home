@@ -2,6 +2,7 @@ package com.spring.boot.doctor.booking.ENTITY;
 
 import java.time.LocalDateTime;
 
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,8 +30,9 @@ public class MedicalDocument {
 
     private String fileType;
 
+    
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false,name = "data", columnDefinition = "LONGBLOB")
     private byte[] data;
 
     private LocalDateTime uploadDate;

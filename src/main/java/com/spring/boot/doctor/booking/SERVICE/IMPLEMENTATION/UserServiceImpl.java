@@ -44,4 +44,10 @@ public class UserServiceImpl implements UserService {
         Users user = userRepo.findByUsername(username).orElseThrow();
         return new ResponseUserDetails(user.getId(), user.getUsername(), user.getPassword(), user.getRole().name());
     }
+
+	@Override
+	public String deletePatientByUserId(Long userId) {
+		userRepo.deleteById(userId);
+		return "User is deleted Successfully";
+	}
 }

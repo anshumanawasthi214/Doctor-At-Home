@@ -1,13 +1,14 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
 import com.spring.boot.doctor.booking.DTOs.PatientRequestDto;
+
 import com.spring.boot.doctor.booking.DTOs.PatientResponseDto;
 import com.spring.boot.doctor.booking.SERVICE.PatientService;
+import com.spring.boot.doctor.booking.SERVICE.UserService;
 import com.spring.boot.doctor.booking.UTIL.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/patients")
 public class PatientController {
 
+	@Autowired
+	private UserService userService;
+	
     @Autowired
     private PatientService patientService;
 
@@ -27,14 +31,10 @@ public class PatientController {
         return ResponseEntity.ok(patientService.registerPatient(dto));
     }
 
-    @GetMapping("/get/{id}")
-    public ResponseEntity<?> getPatient(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(patientService.getPatientByUserId(id));
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    @GetMapping("/get")
+    public ResponseEntity<?> getPatient() {
+        return ResponseEntity.ok(patientService.getCurrentPatient());
         }
-    }
 
     @PutMapping("/update")
     public ResponseEntity<?> updatePatient(@RequestBody PatientRequestDto dto, HttpServletRequest request) {
@@ -43,10 +43,10 @@ public class PatientController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deletePatient(HttpServletRequest request) {
+    public ResponseEntity<String> deletePatient(HttpServletRequest request) {
         Long userId = getUserIdFromRequest(request);
-        patientService.deletePatientByUserId(userId);
-        return ResponseEntity.noContent().build();
+        userService.deletePatientByUserId(userId);
+        return ResponseEntity.ok(userService.deletePatientByUserId(userId));
     }
 
     @GetMapping("/history/appointments")
@@ -63,4 +63,6 @@ public class PatientController {
         }
         return null;
     }
+    
+ 
 }

@@ -1,12 +1,14 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
 import com.spring.boot.doctor.booking.DTOs.AuthRequest;
+
 import com.spring.boot.doctor.booking.DTOs.AuthResponse;
 import com.spring.boot.doctor.booking.DTOs.RegisterUserRequest;
 import com.spring.boot.doctor.booking.DTOs.ResponseUserDetails;
 import com.spring.boot.doctor.booking.ENTITY.Role;
 import com.spring.boot.doctor.booking.SERVICE.UserService;
 import com.spring.boot.doctor.booking.UTIL.JWTUtil;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -55,4 +57,6 @@ public class UserController {
         ResponseUserDetails user = userService.getUserDetailsByUsername(authRequest.getUsername());
         return ResponseEntity.ok(new AuthResponse(token, user));
     }
+    
+  
 }

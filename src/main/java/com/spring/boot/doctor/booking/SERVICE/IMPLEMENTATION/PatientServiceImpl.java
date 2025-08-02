@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
@@ -34,7 +36,17 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public PatientResponseDto registerPatient(PatientRequestDto dto) {
-System.out.println(dto);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        Users user = usersRepository.findByUsername(currentUsername)
+            .orElseThrow(() -> new RuntimeException("User not found: " + currentUsername));
+
+        // Prevent duplicate patient registration
+        if (patientRepository.findByUser(user).isPresent()) {
+            throw new RuntimeException("Patient already registered for this user.");
+        }
+
         Patient patient = new Patient();
         patient.setName(dto.getName());
         patient.setEmail(dto.getEmail());
@@ -48,23 +60,22 @@ System.out.println(dto);
         patient.setAllergies(dto.getAllergies());
         patient.setProfilePicture(dto.getProfilePicture());
 
-        // Fetch the associated User entity
-        Users user = usersRepository.findById(dto.getUserId())
-            .orElseThrow(() -> new RuntimeException("User not found with id: " + dto.getUserId()));
-
         patient.setUser(user);
+        user.setPatient(patient);
 
-        // Save and map to DTO
         return mapToResponseDto(patientRepository.save(patient));
     }
 
     @Override
-    public PatientResponseDto getPatientByUserId(Long userId) {
-        Users user = usersRepository.findById(userId)
-            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+    public PatientResponseDto getCurrentPatient() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        Users user = usersRepository.findByUsername(currentUsername)
+            .orElseThrow(() -> new EntityNotFoundException("User not found: " + currentUsername));
 
         Patient patient = patientRepository.findByUser(user)
-            .orElseThrow(() -> new EntityNotFoundException("Patient not found for user id: " + userId));
+            .orElseThrow(() -> new EntityNotFoundException("Patient not found for user: " + currentUsername));
 
         return mapToResponseDto(patient);
     }

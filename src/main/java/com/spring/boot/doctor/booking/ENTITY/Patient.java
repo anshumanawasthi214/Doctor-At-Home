@@ -6,6 +6,8 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -47,6 +49,10 @@ public class Patient {
     @OneToOne
     @JoinColumn(name = "user_id",nullable=false)
     private Users user;
+    
+    
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MedicalDocument> medicalDocuments = new ArrayList<>();
     
     @PrePersist
     protected void onCreate() {

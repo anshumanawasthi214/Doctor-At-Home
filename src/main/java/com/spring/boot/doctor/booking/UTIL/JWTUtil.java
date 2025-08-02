@@ -68,8 +68,15 @@ public class JWTUtil {
 
 	public boolean validateToken(UserDetails userDetails,String token) {
 		//Check if username is same as 
-		final String username = extractUsername(token);
-		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+		   final String username = extractUsername(token);
+		    final boolean notExpired = !isTokenExpired(token);
+
+		    System.out.println("Validating token:");
+		    System.out.println("→ Username from token: " + username);
+		    System.out.println("→ Username from UserDetails: " + userDetails.getUsername());
+		    System.out.println("→ Token expired? " + !notExpired);
+
+		    return username.equals(userDetails.getUsername()) && notExpired;
 		}
 	
 	

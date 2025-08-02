@@ -6,4 +6,5 @@ import com.spring.boot.doctor.booking.DTOs.ResponseUserDetails;
 public interface UserService {
     ResponseUserDetails registerUser(RegisterUserRequest userRequest);
     ResponseUserDetails getUserDetailsByUsername(String username);
+	String deletePatientByUserId(Long userId);
 }

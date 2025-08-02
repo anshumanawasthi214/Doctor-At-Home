@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.spring.boot.doctor.booking.SERVICE.CustomUserDetailsService;
+import com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION.TokenBlacklistService;
 import com.spring.boot.doctor.booking.UTIL.JWTUtil;
 
 import jakarta.servlet.FilterChain;
@@ -26,6 +27,9 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 	
 	@Autowired
 	CustomUserDetailsService customUserDetailsService;
+	
+	@Autowired
+	TokenBlacklistService tokenBlacklistService;
 	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -55,12 +59,14 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 
 			boolean isValidToken = false;
 			try {
-				isValidToken = jwtUtil.validateToken(	userDetails, token);
+				if(!tokenBlacklistService.isTokenBlacklisted(token)) {
+				isValidToken = jwtUtil.validateToken(userDetails, token);
+				}
 			} catch (Exception e) {
 				System.out.println("[JWTAuthFilter] Token validation error: " + e.getMessage());
 			}
-
-			System.out.println("[JWTAuthFilter] Token valid: " + isValidToken);
+				System.out.println("Token valid: "+isValidToken);
+		
 
 			if (isValidToken) {
 				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
