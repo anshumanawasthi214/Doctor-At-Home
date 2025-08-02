@@ -72,10 +72,17 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public DoctorResponseDto getDoctorById(Long doctorId) {
-        Users user = usersRepository.findById(doctorId)
-                .orElseThrow(() -> new EntityNotFoundException("Doctor not found with id " + doctorId));
-        return mapToResponseDto(user.getDoctor());
+    public DoctorResponseDto getDoctorById(Long userId) {
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id " + userId));
+
+        Doctor doctor = user.getDoctor();
+
+        if (doctor == null) {
+            throw new EntityNotFoundException("No doctor profile linked to user with id " + userId);
+        }
+
+        return mapToResponseDto(doctor);
     }
 
     @Override

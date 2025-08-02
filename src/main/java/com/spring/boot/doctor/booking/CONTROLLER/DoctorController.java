@@ -6,6 +6,7 @@ import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
 import com.spring.boot.doctor.booking.REPOSITORY.UsersRepository;
 import com.spring.boot.doctor.booking.SERVICE.DoctorService;
 import com.spring.boot.doctor.booking.SERVICE.UserService;
+import com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION.TokenBlacklistService;
 import com.spring.boot.doctor.booking.UTIL.JWTUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,9 @@ public class DoctorController {
 
     @Autowired
     private JWTUtil jwtUtil;
+    
+    @Autowired
+    private TokenBlacklistService blacklistService;
     
     @Autowired
     UsersRepository usersRepository;
@@ -85,6 +89,19 @@ public class DoctorController {
     }
     
     
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            blacklistService.blacklistToken(token);
+            return ResponseEntity.ok("Logged out successfully.");
+        }
+
+        return ResponseEntity.badRequest().body("No token found.");
+    }
+    
     private Long getUserIdFromRequest(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         if (token != null && token.startsWith("Bearer ")) {
@@ -93,4 +110,7 @@ public class DoctorController {
         }
         return null;
     }
+    
+    
+    
 }
