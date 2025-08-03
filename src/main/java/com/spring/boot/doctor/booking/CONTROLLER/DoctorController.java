@@ -1,6 +1,7 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
 
 
+import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorRequestDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
 import com.spring.boot.doctor.booking.REPOSITORY.UsersRepository;
@@ -15,6 +16,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
@@ -110,6 +114,45 @@ public class DoctorController {
         }
         return null;
     }
+    
+    
+    // --- 1. Get pending appointments for authenticated doctor ---
+    @GetMapping("/appointments/pending")
+    public ResponseEntity<List<AppointmentResponseDto>> getPendingAppointments(HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        List<AppointmentResponseDto> pendingAppointments = doctorService.getPendingAppointments(userId);
+        return ResponseEntity.ok(pendingAppointments);
+    }
+
+    // --- 2. Respond to appointment request (accept/reject) ---
+    @PostMapping("/appointments/{appointmentId}/response")
+    public ResponseEntity<String> respondToAppointment(
+            @PathVariable Long appointmentId,
+            @RequestParam String response) {
+
+        if (!response.equalsIgnoreCase("ACCEPTED") && !response.equalsIgnoreCase("REJECTED")) {
+            return ResponseEntity.badRequest().body("Response must be 'ACCEPTED' or 'REJECTED'");
+        }
+
+        doctorService.respondToAppointment(appointmentId, response.toUpperCase());
+        return ResponseEntity.ok("Appointment " + response.toUpperCase());
+    }
+
+    // --- 3. Download document attached to an appointment ---
+    @GetMapping("/appointments/{appointmentId}/documents/{documentId}/download")
+    public ResponseEntity<Resource> downloadDocument(
+            @PathVariable Long appointmentId,
+            @PathVariable Long documentId) {
+
+        Resource document = doctorService.downloadDocument(appointmentId, documentId);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + document.getFilename() + "\"")
+                .body(document);
+    }
+
     
     
     

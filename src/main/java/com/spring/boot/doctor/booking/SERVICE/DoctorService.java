@@ -5,6 +5,9 @@ package com.spring.boot.doctor.booking.SERVICE;
 
 import java.util.List;
 
+import org.springframework.core.io.Resource;
+
+import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorAdminDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorRequestDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
@@ -34,5 +37,12 @@ public interface DoctorService {
 	void deleteCurrentDoctor();
 	
 	DoctorResponseDto mapToResponseDto(Doctor doctor);
+	
+	
+	 List<AppointmentResponseDto> getPendingAppointments(Long doctorId);
+	 
+	    void respondToAppointment(Long appointmentId, String response); // "ACCEPTED" or "REJECTED"
+	    
+	    Resource downloadDocument(Long appointmentId, Long documentId);
 
 }

@@ -1,5 +1,4 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
-
 import com.spring.boot.doctor.booking.DTOs.PatientRequestDto;
 
 import com.spring.boot.doctor.booking.DTOs.PatientResponseDto;
@@ -8,7 +7,6 @@ import com.spring.boot.doctor.booking.SERVICE.UserService;
 import com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION.TokenBlacklistService;
 import com.spring.boot.doctor.booking.UTIL.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -81,6 +79,4 @@ public class PatientController {
 
         return ResponseEntity.badRequest().body("No token found.");
     }
-    
- 
 }

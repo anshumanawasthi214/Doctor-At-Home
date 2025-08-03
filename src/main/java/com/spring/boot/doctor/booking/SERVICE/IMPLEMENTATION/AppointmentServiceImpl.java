@@ -3,16 +3,16 @@ package com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION;
 import com.spring.boot.doctor.booking.DTOs.AppointmentRequestDto;
 import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
 import com.spring.boot.doctor.booking.ENTITY.Appointment;
-import com.spring.boot.doctor.booking.ENTITY.Appointment.Status;
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
 import com.spring.boot.doctor.booking.ENTITY.Patient;
+import com.spring.boot.doctor.booking.ENTITY.Users;
 import com.spring.boot.doctor.booking.REPOSITORY.AppointmentRepository;
 import com.spring.boot.doctor.booking.REPOSITORY.DoctorRepository;
 import com.spring.boot.doctor.booking.REPOSITORY.PatientRepository;
+import com.spring.boot.doctor.booking.REPOSITORY.UsersRepository;
 import com.spring.boot.doctor.booking.SERVICE.AppointmentService;
 
 import jakarta.persistence.EntityNotFoundException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,110 +22,98 @@ import java.util.stream.Collectors;
 @Service
 public class AppointmentServiceImpl implements AppointmentService {
 
-    @Autowired
-    private AppointmentRepository appointmentRepository;
-
-    @Autowired
-    private DoctorRepository doctorRepository;
-
-    @Autowired
-    private PatientRepository patientRepository;
+    @Autowired private AppointmentRepository appointmentRepository;
+    @Autowired private DoctorRepository doctorRepository;
+    @Autowired private PatientRepository patientRepository;
+    @Autowired private UsersRepository usersRepository;
 
     @Override
-    public AppointmentResponseDto bookAppointment(AppointmentRequestDto dto) {
+    public AppointmentResponseDto bookAppointment(AppointmentRequestDto dto, Long patientUserId) {
         Doctor doctor = doctorRepository.findById(dto.getDoctorId())
-                .orElseThrow(() -> new EntityNotFoundException("Doctor not found with id " + dto.getDoctorId()));
-
-        // ✅ Only check if doctor status is APPROVED
+            .orElseThrow(() -> new EntityNotFoundException("Doctor not found: " + dto.getDoctorId()));
         if (doctor.getStatus() != Doctor.Status.APPROVED) {
-            throw new IllegalStateException("Doctor is not yet approved for appointments.");
+            throw new IllegalStateException("Doctor not approved");
         }
+        Users patientUser = usersRepository.findById(patientUserId)
+            .orElseThrow(() -> new EntityNotFoundException("User not found: " + patientUserId));
+        Patient patient = patientRepository.findByUser(patientUser)
+            .orElseThrow(() -> new EntityNotFoundException("Patient profile not found"));
 
-        Patient patient = patientRepository.findById(dto.getPatientId())
-                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id " + dto.getPatientId()));
+        Appointment appt = new Appointment();
+        appt.setDoctor(doctor);
+        appt.setPatient(patient);
+        appt.setScheduledDateTime(dto.getScheduledDateTime());
+        appt.setType(Appointment.Type.valueOf(dto.getType().toUpperCase()));
+        appt.setStatus(Appointment.Status.PENDING);
 
-        Appointment appointment = new Appointment();
-        appointment.setDoctor(doctor);
-        appointment.setPatient(patient);
-        appointment.setScheduledDateTime(dto.getScheduledDateTime());
-        appointment.setType(Appointment.Type.valueOf(dto.getType().toUpperCase()));
-        appointment.setStatus(Appointment.Status.PENDING);
-
-        Appointment saved = appointmentRepository.save(appointment);
-        return mapToResponseDto(saved);
-    }
-
-
-    @Override
-    public AppointmentResponseDto getAppointmentById(Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Appointment not found with id " + appointmentId));
-        return mapToResponseDto(appointment);
+        Appointment saved = appointmentRepository.save(appt);
+        return mapToDto(saved);
     }
 
     @Override
-    public List<AppointmentResponseDto> getAppointmentsByDoctor(Long doctorId) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new EntityNotFoundException("Doctor not found with id " + doctorId));
-        List<Appointment> appointments = appointmentRepository.findByDoctor(doctor);
-        return appointments.stream()
-                .map(this::mapToResponseDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AppointmentResponseDto> getAppointmentsByPatient(Long patientId) {
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id " + patientId));
-        List<Appointment> appointments = appointmentRepository.findByPatient(patient);
-        return appointments.stream()
-                .map(this::mapToResponseDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public AppointmentResponseDto updateAppointment(Long appointmentId, AppointmentRequestDto dto) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Appointment not found with id " + appointmentId));
-        if (dto.getScheduledDateTime() != null) {
-            appointment.setScheduledDateTime(dto.getScheduledDateTime());
+    public AppointmentResponseDto getAppointmentById(Long appointmentId, Long patientUserId) {
+        Appointment appt = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Appointment not found: " + appointmentId));
+        if (!appt.getPatient().getUser().getId().equals(patientUserId)) {
+            throw new SecurityException("Not authorized");
         }
-        if (dto.getType() != null) {
-            appointment.setType(Appointment.Type.valueOf(dto.getType().toUpperCase()));
-        }
-        Appointment updated = appointmentRepository.save(appointment);
-        return mapToResponseDto(updated);
+        return mapToDto(appt);
     }
 
     @Override
-    public void cancelAppointment(Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Appointment not found with id " + appointmentId));
-        appointment.setStatus(Appointment.Status.CANCELLED);
-        appointmentRepository.save(appointment);
+    public List<AppointmentResponseDto> getAppointmentsByPatient(Long patientUserId) {
+        Users u = usersRepository.findById(patientUserId)
+            .orElseThrow(() -> new EntityNotFoundException("User not found: " + patientUserId));
+        Patient patient = patientRepository.findByUser(u)
+            .orElseThrow(() -> new EntityNotFoundException("Patient not found"));
+
+        return appointmentRepository.findByPatient(patient)
+            .stream()
+            .map(this::mapToDto)
+            .collect(Collectors.toList());
     }
 
-    private AppointmentResponseDto mapToResponseDto(Appointment appointment) {
-        AppointmentResponseDto dto = new AppointmentResponseDto();
-        dto.setId(appointment.getId());
-        dto.setDoctorId(appointment.getDoctor().getId());
-        dto.setPatientId(appointment.getPatient().getId());
-        dto.setScheduledDateTime(appointment.getScheduledDateTime());
-        dto.setType(appointment.getType().name());
-        dto.setStatus(appointment.getStatus().name());
-        return dto;
+    @Override
+    public AppointmentResponseDto updateAppointment(Long appointmentId, AppointmentRequestDto dto, Long patientUserId) {
+        Appointment appt = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+        if (!appt.getPatient().getUser().getId().equals(patientUserId)) {
+            throw new SecurityException("Not authorized");
+        }
+        if (dto.getScheduledDateTime() != null) appt.setScheduledDateTime(dto.getScheduledDateTime());
+        if (dto.getType() != null) appt.setType(Appointment.Type.valueOf(dto.getType().toUpperCase()));
+        return mapToDto(appointmentRepository.save(appt));
     }
 
+    @Override
+    public void cancelAppointment(Long appointmentId, Long patientUserId) {
+        Appointment appt = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+        if (!appt.getPatient().getUser().getId().equals(patientUserId)) {
+            throw new SecurityException("Not authorized");
+        }
+        appt.setStatus(Appointment.Status.CANCELLED);
+        appointmentRepository.save(appt);
+    }
 
-	@Override
-	public String changeAppointmentStatus(Long appointmentId, Status status) {
-		Appointment appointment=appointmentRepository.findById(appointmentId)
-				.orElseThrow(() -> new EntityNotFoundException("Appointment not found with id " + appointmentId));
-		
-		appointment.setStatus(status);
-		appointmentRepository.save(appointment);
-		return "Appointment Status for appointment Id "+appointmentId+" Changed to :"+appointment.getStatus();
-		
-	
-	}
+    @Override
+    public String changeAppointmentStatus(Long appointmentId, Appointment.Status status) {
+        Appointment appt = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+        appt.setStatus(status);
+        appointmentRepository.save(appt);
+        return "Status updated";
+    }
+
+    private AppointmentResponseDto mapToDto(Appointment a) {
+        return AppointmentResponseDto.builder()
+            .appointmentId(a.getId())
+            .patientId(a.getPatient().getId())
+            .patientName(a.getPatient().getName())
+            .scheduledDateTime(a.getScheduledDateTime())
+            .type(a.getType().name())
+            .status(a.getStatus().name())
+            .notes(a.getNotes())
+            .build();
+    }
 }

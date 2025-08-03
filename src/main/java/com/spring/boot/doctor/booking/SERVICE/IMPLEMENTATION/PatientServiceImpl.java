@@ -138,9 +138,8 @@ public class PatientServiceImpl implements PatientService {
 
     private AppointmentResponseDto mapToAppointmentResponseDto(Appointment a) {
         AppointmentResponseDto dto = new AppointmentResponseDto();
-        dto.setId(a.getId());
-        dto.setDoctorId(a.getDoctor().getId());
-        dto.setPatientId(a.getPatient().getId());
+        dto.setAppointmentId(a.getId());
+        dto.setPatientName(a.getPatient().getName());
         dto.setScheduledDateTime(a.getScheduledDateTime());
         dto.setType(a.getType().name());
         dto.setStatus(a.getStatus().name());

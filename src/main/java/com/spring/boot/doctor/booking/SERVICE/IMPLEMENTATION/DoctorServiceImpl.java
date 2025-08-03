@@ -1,20 +1,28 @@
 package com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION;
 
 
+import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
+
 import com.spring.boot.doctor.booking.DTOs.DoctorAdminDto;
 
 
 import com.spring.boot.doctor.booking.DTOs.DoctorRequestDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
+import com.spring.boot.doctor.booking.ENTITY.Appointment;
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
+import com.spring.boot.doctor.booking.ENTITY.MedicalDocument;
 import com.spring.boot.doctor.booking.ENTITY.Users;
+import com.spring.boot.doctor.booking.REPOSITORY.AppointmentRepository;
 import com.spring.boot.doctor.booking.REPOSITORY.DoctorRepository;
+import com.spring.boot.doctor.booking.REPOSITORY.MedicalDocumentRepository;
 import com.spring.boot.doctor.booking.REPOSITORY.UsersRepository;
 import com.spring.boot.doctor.booking.SERVICE.DoctorService;
 
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,12 +34,79 @@ import java.util.stream.Collectors;
 @Service
 public class DoctorServiceImpl implements DoctorService {
 
+
+	
+	@Autowired
+	private AppointmentRepository appointmentRepository;
+	    
+	
+	@Autowired
+    private MedicalDocumentRepository medicalDocumentRepository;
+
+	
     @Autowired
     private DoctorRepository doctorRepository;
     
     @Autowired
     private UsersRepository usersRepository;
 
+    
+    @Override
+    public List<AppointmentResponseDto> getPendingAppointments(Long userId) {
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Doctor not found"));
+        Doctor doctor=user.getDoctor();
+        return appointmentRepository.findByDoctorAndStatus(doctor, Appointment.Status.PENDING)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void respondToAppointment(Long appointmentId, String response) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+
+        Appointment.Status status = Appointment.Status.valueOf(response.toUpperCase());
+        if (status != Appointment.Status.ACCEPTED && status != Appointment.Status.REJECTED) {
+            throw new IllegalArgumentException("Invalid response. Use ACCEPTED or REJECTED.");
+        }
+
+        appointment.setStatus(status);
+        appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public Resource downloadDocument(Long appointmentId, Long documentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+
+        if (appointment.getStatus() != Appointment.Status.ACCEPTED) {
+            throw new IllegalStateException("Cannot download document before appointment is accepted");
+        }
+
+        MedicalDocument doc = medicalDocumentRepository.findById(documentId)
+                .orElseThrow(() -> new EntityNotFoundException("Document not found"));
+
+        if (!doc.getPatient().getId().equals(appointment.getPatient().getId())) {
+            throw new SecurityException("Document does not belong to this patient");
+        }
+
+        return new ByteArrayResource(doc.getData());
+    }
+
+    private AppointmentResponseDto mapToDto(Appointment appointment) {
+        return AppointmentResponseDto.builder()
+                .appointmentId(appointment.getId())
+                .patientName(appointment.getPatient().getName())
+                .scheduledDateTime(appointment.getScheduledDateTime())
+                .type(appointment.getType().name())
+                .notes(appointment.getNotes())
+                .status(appointment.getStatus().name())
+                .build();
+    }
+    
+    
     @Override
     public DoctorResponseDto registerDoctor(DoctorRequestDto dto) {
     	 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

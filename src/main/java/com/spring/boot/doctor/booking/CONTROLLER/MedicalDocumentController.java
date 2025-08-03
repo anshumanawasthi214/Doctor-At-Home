@@ -18,6 +18,7 @@ public class MedicalDocumentController {
 
     @PostMapping("/upload")
     public ResponseEntity<Void> uploadDocument(@RequestParam("file") MultipartFile file) {
+    	  System.out.println("File name received: " + file.getOriginalFilename());
         documentService.uploadDocument(file);
         return ResponseEntity.ok().build();
     }
