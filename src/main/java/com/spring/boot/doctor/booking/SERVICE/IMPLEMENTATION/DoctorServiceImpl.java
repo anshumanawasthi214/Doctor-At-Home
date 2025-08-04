@@ -10,6 +10,7 @@ import com.spring.boot.doctor.booking.DTOs.DoctorRequestDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorResponseDto;
 import com.spring.boot.doctor.booking.ENTITY.Appointment;
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
+import com.spring.boot.doctor.booking.ENTITY.Doctor.Status;
 import com.spring.boot.doctor.booking.ENTITY.MedicalDocument;
 import com.spring.boot.doctor.booking.ENTITY.Users;
 import com.spring.boot.doctor.booking.REPOSITORY.AppointmentRepository;
@@ -19,6 +20,7 @@ import com.spring.boot.doctor.booking.REPOSITORY.UsersRepository;
 import com.spring.boot.doctor.booking.SERVICE.DoctorService;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -36,7 +38,7 @@ public class DoctorServiceImpl implements DoctorService {
 
 
 	
-	@Autowired
+	@Autowired   
 	private AppointmentRepository appointmentRepository;
 	    
 	
@@ -152,9 +154,12 @@ public class DoctorServiceImpl implements DoctorService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id " + userId));
 
         Doctor doctor = user.getDoctor();
-
+        
         if (doctor == null) {
             throw new EntityNotFoundException("No doctor profile linked to user with id " + userId);
+        }
+        else if(doctor.getStatus()==Status.PENDING) {
+        	throw new EntityNotFoundException("Doctor Profile not approved Yet");
         }
 
         return mapToResponseDto(doctor);
@@ -184,12 +189,7 @@ public class DoctorServiceImpl implements DoctorService {
         return mapToResponseDto(updated);
     }
 
-    @Override
-    public void deleteDoctor(Long doctorId) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new EntityNotFoundException("Doctor not found with id " + doctorId));
-        doctorRepository.delete(doctor);
-    }
+   
 
     @Override
     public List<Doctor> searchDoctorsWithFilters(Long id, String name, String specialization, String location,
@@ -308,33 +308,22 @@ public class DoctorServiceImpl implements DoctorService {
 		
 	}
 	
-	
-
-
-@Override
-public DoctorResponseDto getCurrentDoctor() {
-    String username = getCurrentUsername();
-    Users user = usersRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-    Doctor doctor = doctorRepository.findByUser(user)
-            .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + username));
-    return mapToResponseDto(doctor);
-}
-
-@Override
-public void deleteCurrentDoctor() {
-    String username = getCurrentUsername();
-    Users user = usersRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-    Doctor doctor = doctorRepository.findByUser(user)
-            .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + username));
-
-    doctorRepository.delete(doctor);
-}
-
 //Helper Function
 private String getCurrentUsername() {
     return SecurityContextHolder.getContext().getAuthentication().getName();
 }
 
+@Override
+public DoctorResponseDto getCurrentDoctor(HttpServletRequest request) {
+	   String username = getCurrentUsername();
+	    Users user = usersRepository.findByUsername(username)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+	    Doctor doctor = doctorRepository.findByUser(user)
+	            .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + username));
+	    return mapToResponseDto(doctor);
+	}
+
+
+
 }
+

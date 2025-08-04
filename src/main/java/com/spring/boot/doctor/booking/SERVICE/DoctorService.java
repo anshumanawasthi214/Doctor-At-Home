@@ -8,11 +8,12 @@ import com.spring.boot.doctor.booking.DTOs.*;
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
 import com.spring.boot.doctor.booking.ENTITY.Doctor.Status;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 public interface DoctorService {
 
     // 👤 Doctor self-service methods (token-based)
-    DoctorResponseDto getCurrentDoctor();
-    void deleteCurrentDoctor();
+    DoctorResponseDto getCurrentDoctor(HttpServletRequest request);
 
     // ✅ Admin-only methods
     List<DoctorAdminDto> getAllDoctorsForAdmin();
@@ -46,5 +47,4 @@ public interface DoctorService {
     void respondToAppointment(Long appointmentId, String response); // "ACCEPTED" or "REJECTED"
     Resource downloadDocument(Long appointmentId, Long documentId);
     public DoctorResponseDto updateCurrentDoctor(Long userId, DoctorRequestDto dto);
-    public void deleteDoctor(Long doctorId);
 }

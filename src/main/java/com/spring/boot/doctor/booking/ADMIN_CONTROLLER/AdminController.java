@@ -1,7 +1,6 @@
 package com.spring.boot.doctor.booking.ADMIN_CONTROLLER;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +10,7 @@ import com.spring.boot.doctor.booking.DTOs.AdminCreationDto;
 import com.spring.boot.doctor.booking.DTOs.AdminResponseDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorAdminDto;
 import com.spring.boot.doctor.booking.DTOs.PatientAdminDto;
-import com.spring.boot.doctor.booking.DTOs.PatientRequestDto;
-import com.spring.boot.doctor.booking.ENTITY.Admin;
+
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
 import com.spring.boot.doctor.booking.SERVICE.AdminService;
 import com.spring.boot.doctor.booking.SERVICE.DoctorService;

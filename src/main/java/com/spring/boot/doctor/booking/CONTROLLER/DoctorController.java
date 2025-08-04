@@ -97,7 +97,10 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.getDoctorById(id));
     }
     
-    
+    @GetMapping("/me")
+    public ResponseEntity<DoctorResponseDto> getDoctor(HttpServletRequest request){
+    	return ResponseEntity.ok(doctorService.getCurrentDoctor(request));
+    }
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
