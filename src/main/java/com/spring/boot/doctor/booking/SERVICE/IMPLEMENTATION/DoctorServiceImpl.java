@@ -161,7 +161,7 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public DoctorResponseDto updateDoctor(Long userId, DoctorRequestDto dto) {
+    public DoctorResponseDto updateCurrentDoctor(Long userId, DoctorRequestDto dto) {
     	 Users user = usersRepository.findById(userId).orElseThrow();
          Doctor doctor = doctorRepository.findByUser(user).orElseThrow();
         
@@ -196,64 +196,56 @@ public class DoctorServiceImpl implements DoctorService {
                                                  Double minFee, Double maxFee, Double minRatings,
                                                  Integer experience, String languages, String availability) {
 
-        Specification<Doctor> spec = null;
+        Specification<Doctor> spec = (root, query, cb) -> 
+            cb.equal(root.get("status"), Doctor.Status.APPROVED); // ✅ only approved
 
         if (id != null) {
-            spec = (root, query, cb) -> cb.equal(root.get("id"), id);
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("id"), id));
         }
 
         if (name != null && !name.isBlank()) {
-            Specification<Doctor> nameSpec = (root, query, cb) ->
-                    cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%");
-            spec = (spec == null) ? nameSpec : spec.and(nameSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
         }
 
         if (specialization != null && !specialization.isBlank()) {
-            Specification<Doctor> specializationSpec = (root, query, cb) ->
-                    cb.like(cb.lower(root.get("specialization")), "%" + specialization.toLowerCase() + "%");
-            spec = (spec == null) ? specializationSpec : spec.and(specializationSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.like(cb.lower(root.get("specialization")), "%" + specialization.toLowerCase() + "%"));
         }
 
         if (location != null && !location.isBlank()) {
-            Specification<Doctor> locationSpec = (root, query, cb) ->
-                    cb.like(cb.lower(root.get("location")), "%" + location.toLowerCase() + "%");
-            spec = (spec == null) ? locationSpec : spec.and(locationSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.like(cb.lower(root.get("location")), "%" + location.toLowerCase() + "%"));
         }
 
         if (minFee != null) {
-            Specification<Doctor> minFeeSpec = (root, query, cb) ->
-                    cb.greaterThanOrEqualTo(root.get("consultationFee"), minFee);
-            spec = (spec == null) ? minFeeSpec : spec.and(minFeeSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.greaterThanOrEqualTo(root.get("consultationFee"), minFee));
         }
 
         if (maxFee != null) {
-            Specification<Doctor> maxFeeSpec = (root, query, cb) ->
-                    cb.lessThanOrEqualTo(root.get("consultationFee"), maxFee);
-            spec = (spec == null) ? maxFeeSpec : spec.and(maxFeeSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.lessThanOrEqualTo(root.get("consultationFee"), maxFee));
         }
 
         if (minRatings != null) {
-            Specification<Doctor> minRatingsSpec = (root, query, cb) ->
-                    cb.greaterThanOrEqualTo(root.get("ratings"), minRatings);
-            spec = (spec == null) ? minRatingsSpec : spec.and(minRatingsSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.greaterThanOrEqualTo(root.get("ratings"), minRatings));
         }
 
         if (experience != null) {
-            Specification<Doctor> experienceSpec = (root, query, cb) ->
-                    cb.greaterThanOrEqualTo(root.get("yearsOfExperience"), experience);
-            spec = (spec == null) ? experienceSpec : spec.and(experienceSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.greaterThanOrEqualTo(root.get("yearsOfExperience"), experience));
         }
 
         if (languages != null && !languages.isBlank()) {
-            Specification<Doctor> languageSpec = (root, query, cb) ->
-                    cb.like(cb.lower(root.get("languages")), "%" + languages.toLowerCase() + "%");
-            spec = (spec == null) ? languageSpec : spec.and(languageSpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.like(cb.lower(root.get("languages")), "%" + languages.toLowerCase() + "%"));
         }
 
         if (availability != null && !availability.isBlank()) {
-            Specification<Doctor> availabilitySpec = (root, query, cb) ->
-                    cb.like(cb.lower(root.get("availability")), "%" + availability.toLowerCase() + "%");
-            spec = (spec == null) ? availabilitySpec : spec.and(availabilitySpec);
+            spec = spec.and((root, query, cb) -> 
+                cb.like(cb.lower(root.get("availability")), "%" + availability.toLowerCase() + "%"));
         }
 
         return doctorRepository.findAll(spec);
@@ -327,31 +319,6 @@ public DoctorResponseDto getCurrentDoctor() {
     Doctor doctor = doctorRepository.findByUser(user)
             .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + username));
     return mapToResponseDto(doctor);
-}
-
-@Override
-public DoctorResponseDto updateCurrentDoctor(DoctorRequestDto dto) {
-    String username = getCurrentUsername();
-    Users user = usersRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-    Doctor doctor = doctorRepository.findByUser(user)
-            .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + username));
-
-    if (dto.getName() != null) doctor.setName(dto.getName());
-    if (dto.getEmail() != null) doctor.setEmail(dto.getEmail());
-    if (dto.getPhone() != null) doctor.setPhone(dto.getPhone());
-    if (dto.getSpecialization() != null) doctor.setSpecialization(dto.getSpecialization());
-    if (dto.getLocation() != null) doctor.setLocation(dto.getLocation());
-    if (dto.getAvailability() != null) doctor.setAvailability(dto.getAvailability());
-    if (dto.getQualification() != null) doctor.setQualification(dto.getQualification());
-    if (dto.getYearsOfExperience() != null) doctor.setYearsOfExperience(dto.getYearsOfExperience());
-    if (dto.getConsultationFee() != null) doctor.setConsultationFee(dto.getConsultationFee());
-    if (dto.getProfilePicture() != null) doctor.setProfilePicture(dto.getProfilePicture());
-    if (dto.getLanguages() != null) doctor.setLanguages(dto.getLanguages());
-    if (dto.getAbout() != null) doctor.setAbout(dto.getAbout());
-    if (dto.getSpecialties() != null) doctor.setSpecialties(dto.getSpecialties());
-
-    return mapToResponseDto(doctorRepository.save(doctor));
 }
 
 @Override

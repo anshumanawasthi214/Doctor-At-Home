@@ -1,4 +1,7 @@
 package com.spring.boot.doctor.booking.CONTROLLER;
+import io.swagger.v3.oas.annotations.Operation;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 
 import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
@@ -42,6 +45,7 @@ public class DoctorController {
     UserService userService;
 
     // Unauthenticated search
+    @Operation(summary = "Search doctors", security = @SecurityRequirement(name = ""))
     @GetMapping("/search")
     public ResponseEntity<List<DoctorResponseDto>> searchDoctors(
         @RequestParam(required = false) Long id,
@@ -69,7 +73,7 @@ public class DoctorController {
         @RequestBody DoctorRequestDto dto,
         HttpServletRequest request) {
     	 Long userId = getUserIdFromRequest(request);
-         return ResponseEntity.ok(doctorService.updateDoctor(userId, dto));
+         return ResponseEntity.ok(doctorService.updateCurrentDoctor(userId, dto));
     }
 
     // Self delete (authenticated doctor only)
@@ -80,13 +84,14 @@ public class DoctorController {
           return ResponseEntity.ok(userService.deleteDoctorByUserId(userId));
     }
 
-    // Register doctor (unauthenticated)
+    // Register doctor
     @PostMapping("/register-doctor")
     public ResponseEntity<DoctorResponseDto> registerDoctor(@RequestBody DoctorRequestDto dto) {
         return ResponseEntity.ok(doctorService.registerDoctor(dto));
     }
 
     // Get by ID (open)
+    @Operation(summary = "Search doctors By their Id", security = @SecurityRequirement(name = ""))
     @GetMapping("/get/{id}")
     public ResponseEntity<DoctorResponseDto> getDoctorById(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.getDoctorById(id));

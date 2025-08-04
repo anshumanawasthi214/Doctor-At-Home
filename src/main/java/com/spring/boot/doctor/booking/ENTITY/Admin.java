@@ -20,6 +20,10 @@ public class Admin {
     private String email;
 
     private String phone;
+    
+    @OneToOne
+    @JoinColumn(name = "user_id",nullable=false)
+    private Users user;
 
     private LocalDateTime createdAt;
 

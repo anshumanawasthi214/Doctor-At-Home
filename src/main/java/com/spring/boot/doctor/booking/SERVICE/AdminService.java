@@ -4,13 +4,14 @@ package com.spring.boot.doctor.booking.SERVICE;
 import java.util.List;
 import java.util.Optional;
 
+import com.spring.boot.doctor.booking.DTOs.AdminCreationDto;
+import com.spring.boot.doctor.booking.DTOs.AdminResponseDto;
 import com.spring.boot.doctor.booking.ENTITY.Admin;
 
 public interface AdminService {
-	  Admin createAdmin(Admin admin);
-	    Admin updateAdmin(Admin admin);
-	    void deleteAdmin(Long id);
-	    Optional<Admin> getAdminById(Long id);
-	    Optional<Admin> getAdminByEmail(String email);
-	    List<Admin> getAllAdmins();
+	AdminResponseDto createAdmin(AdminCreationDto admin);
+    Optional<Admin> getAdminByEmail(String email); // internal use
+    List<Admin> getAllAdmins(); // if you still need this
+	AdminResponseDto getCurrentAdmin();
+	AdminResponseDto updateAdminByUserId(Long userId, AdminCreationDto dto);
 }

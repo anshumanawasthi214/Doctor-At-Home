@@ -44,6 +44,9 @@ import jakarta.persistence.Entity;
 		
 		@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 		private Doctor doctor;
+		
+		@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+		private Admin admin;
 	  
 		@Enumerated(EnumType.STRING)
 		private Role role;

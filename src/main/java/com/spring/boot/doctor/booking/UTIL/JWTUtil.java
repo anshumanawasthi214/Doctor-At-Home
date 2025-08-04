@@ -2,12 +2,14 @@ package com.spring.boot.doctor.booking.UTIL;
 
 import java.util.Date;
 
+
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
@@ -17,13 +19,25 @@ import com.spring.boot.doctor.booking.REPOSITORY.UsersRepository;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JWTUtil {
-	private final int EXTRA_TIME=1000*60*60;
-	private final String SECRET_KEY="ahfhghhf;lahfohflkadshfahf;ldahf;asdhfdalfahg9y859hff2393678@$%";
-	private final SecretKey key=Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 	
+	@Value("${jwt.expiration.time}")
+	private int EXTRA_TIME;
+	
+	@Value("${jwt.secret.key}")
+	private String SECRET_KEY;
+		
+	
+	
+	private  SecretKey key;
+
+	@PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    }
 	
 	@Autowired
 	UsersRepository userRepo;

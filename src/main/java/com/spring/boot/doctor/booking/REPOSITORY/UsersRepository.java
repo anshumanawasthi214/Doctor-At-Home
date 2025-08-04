@@ -11,4 +11,6 @@ import com.spring.boot.doctor.booking.ENTITY.Users;
 public interface UsersRepository extends JpaRepository<Users, Long> {
     Optional<Users> findByUsername(String username);
 
+	
+
 }

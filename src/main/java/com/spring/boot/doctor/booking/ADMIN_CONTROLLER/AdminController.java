@@ -7,97 +7,107 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.spring.boot.doctor.booking.DTOs.AdminCreationDto;
+import com.spring.boot.doctor.booking.DTOs.AdminResponseDto;
 import com.spring.boot.doctor.booking.DTOs.DoctorAdminDto;
 import com.spring.boot.doctor.booking.DTOs.PatientAdminDto;
+import com.spring.boot.doctor.booking.DTOs.PatientRequestDto;
 import com.spring.boot.doctor.booking.ENTITY.Admin;
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
 import com.spring.boot.doctor.booking.SERVICE.AdminService;
 import com.spring.boot.doctor.booking.SERVICE.DoctorService;
 import com.spring.boot.doctor.booking.SERVICE.PatientService;
+import com.spring.boot.doctor.booking.SERVICE.UserService;
+import com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION.TokenBlacklistService;
+import com.spring.boot.doctor.booking.UTIL.JWTUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
 
-    @Autowired
-    private AdminService adminService;
+    @Autowired private AdminService adminService;
+    @Autowired private DoctorService doctorService;
+    @Autowired private PatientService patientService;
+    @Autowired private TokenBlacklistService blacklistService;
+    @Autowired private JWTUtil jwtUtil;
+    @Autowired private UserService userService;
 
-    @Autowired
-    private DoctorService doctorService;
-
-    @Autowired
-    private PatientService patientService;
-
-    // ----------------- Admin CRUD -----------------
-
+    // ✅ Create Admin (use only in dev or by another super admin)
     @PostMapping("/create")
-    public ResponseEntity<Admin> createAdmin(@RequestBody Admin admin) {
-        Admin created = adminService.createAdmin(admin);
-        return ResponseEntity.ok(created);
-    }
-    
-    @PostMapping("/health")
-    public String checkHealth() {
-    	return "HealthY";
-    }
-    
-    
-    
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Admin> updateAdmin(@PathVariable Long id, @RequestBody Admin admin) {
-        Optional<Admin> existing = adminService.getAdminById(id);
-        if (existing.isPresent()) {
-            admin.setId(id);
-            return ResponseEntity.ok(adminService.updateAdmin(admin));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<AdminResponseDto> createAdmin(@RequestBody AdminCreationDto admin) {
+    	System.out.println(admin);
+        return ResponseEntity.ok(adminService.createAdmin(admin));
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteAdmin(@PathVariable Long id) {
-        adminService.deleteAdmin(id);
-        return ResponseEntity.noContent().build();
+    // ✅ Get logged-in admin info
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyDetails() {
+    	return ResponseEntity.ok(adminService.getCurrentAdmin());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Admin> getAdminById(@PathVariable Long id) {
-        Optional<Admin> admin = adminService.getAdminById(id);
-        return admin.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    // ✅ Update logged-in admin only
+    @PutMapping("/update")
+    public ResponseEntity<AdminResponseDto> updateAdmin(@RequestBody AdminCreationDto dto, HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        return ResponseEntity.ok(adminService.updateAdminByUserId(userId, dto));
     }
 
-    @GetMapping("/get/all")
-    public ResponseEntity<List<Admin>> getAllAdmins() {
-        return ResponseEntity.ok(adminService.getAllAdmins());
+    // ✅ Delete own admin account
+    @DeleteMapping("/delete")
+    public ResponseEntity<Object> deleteAdmin(HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        userService.deletePatientByUserId(userId);
+        return ResponseEntity.ok(userService.deleteAdminByUserId(userId));
+    }
+    // ✅ View all registered doctors (with limited data)
+    @GetMapping("/doctors")
+    public ResponseEntity<List<DoctorAdminDto>> getAllDoctors() {
+        return ResponseEntity.ok(doctorService.getAllDoctorsForAdmin());
     }
 
-    // ----------------- Doctor Management -----------------
-
-    @GetMapping("/get/all/doctors")
-    public List<DoctorAdminDto> getAllDoctors() {
-        return doctorService.getAllDoctorsForAdmin();
-    }
-
-    @PutMapping("/update/doctors/{id}/status")
+    // ✅ Approve or reject doctor
+    @PutMapping("/doctors/{id}/status")
     public ResponseEntity<String> updateDoctorStatus(
             @PathVariable Long id,
             @RequestParam("status") String statusString) {
 
-        Doctor.Status status;
         try {
-            status = Doctor.Status.valueOf(statusString.toUpperCase());
+            Doctor.Status status = Doctor.Status.valueOf(statusString.toUpperCase());
+            doctorService.updateDoctorStatus(id, status);
+            return ResponseEntity.ok("Doctor status updated to " + status);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid status: " + statusString);
         }
-
-        doctorService.updateDoctorStatus(id, status);
-        return ResponseEntity.ok("Doctor status updated to " + status);
     }
 
-    // ----------------- Patient Management -----------------
+    // ✅ View patients with safe DTO
+    @GetMapping("/patients")
+    public ResponseEntity<List<PatientAdminDto>> getAllPatients() {
+        return ResponseEntity.ok(patientService.getAllPatientsForAdmin());
+    }
+    
+    
+    private Long getUserIdFromRequest(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            return jwtUtil.extractUserId(token);
+        }
+        return null;
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
 
-    @GetMapping("/get/all/patients")
-    public List<PatientAdminDto> getAllPatients() {
-        return patientService.getAllPatientsForAdmin();
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            blacklistService.blacklistToken(token);
+            return ResponseEntity.ok("Logged out successfully.");
+        }
+
+        return ResponseEntity.badRequest().body("No token found.");
     }
 }

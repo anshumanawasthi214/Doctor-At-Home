@@ -9,6 +9,8 @@ import com.spring.boot.doctor.booking.ENTITY.Role;
 import com.spring.boot.doctor.booking.SERVICE.UserService;
 import com.spring.boot.doctor.booking.UTIL.JWTUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +32,15 @@ public class UserController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("/register/patient")
+    @Operation(summary = "Create Patient's Account", security = @SecurityRequirement(name = ""))
     public ResponseEntity<ResponseUserDetails> registerPatient(@RequestBody RegisterUserRequest request) {
         request.setRole(Role.PATIENT);
         return ResponseEntity.ok(userService.registerUser(request));
     }
 
     @PostMapping("/register/doctor")
+    @Operation(summary = "Create Doctor's Account", security = @SecurityRequirement(name = ""))
+
     public ResponseEntity<ResponseUserDetails> registerDoctor(@RequestBody RegisterUserRequest request) {
         request.setRole(Role.DOCTOR);
         return ResponseEntity.ok(userService.registerUser(request));

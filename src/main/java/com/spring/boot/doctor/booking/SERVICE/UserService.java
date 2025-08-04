@@ -8,4 +8,5 @@ public interface UserService {
     ResponseUserDetails getUserDetailsByUsername(String username);
 	String deletePatientByUserId(Long userId);
 	String deleteDoctorByUserId(Long userId);
+	Object deleteAdminByUserId(Long userId);
 }
