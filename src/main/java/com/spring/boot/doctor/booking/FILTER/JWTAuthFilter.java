@@ -59,9 +59,8 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 
 			boolean isValidToken = false;
 			try {
-				if(!tokenBlacklistService.isTokenBlacklisted(token)) {
+				 
 				isValidToken = jwtUtil.validateToken(userDetails, token);
-				}
 			} catch (Exception e) {
 				System.out.println("[JWTAuthFilter] Token validation error: " + e.getMessage());
 			}

@@ -1,13 +1,13 @@
 package com.spring.boot.doctor.booking.SERVICE.IMPLEMENTATION;
 
 import com.spring.boot.doctor.booking.DTOs.AppointmentRequestDto;
+
 import com.spring.boot.doctor.booking.DTOs.AppointmentResponseDto;
 import com.spring.boot.doctor.booking.ENTITY.Appointment;
 import com.spring.boot.doctor.booking.ENTITY.Doctor;
 import com.spring.boot.doctor.booking.ENTITY.Patient;
 import com.spring.boot.doctor.booking.ENTITY.Users;
 import com.spring.boot.doctor.booking.REPOSITORY.AppointmentRepository;
-import com.spring.boot.doctor.booking.REPOSITORY.DoctorRepository;
 import com.spring.boot.doctor.booking.REPOSITORY.PatientRepository;
 import com.spring.boot.doctor.booking.REPOSITORY.UsersRepository;
 import com.spring.boot.doctor.booking.SERVICE.AppointmentService;
@@ -23,15 +23,14 @@ import java.util.stream.Collectors;
 public class AppointmentServiceImpl implements AppointmentService {
 
     @Autowired private AppointmentRepository appointmentRepository;
-    @Autowired private DoctorRepository doctorRepository;
     @Autowired private PatientRepository patientRepository;
     @Autowired private UsersRepository usersRepository;
 
     @Override
     public AppointmentResponseDto bookAppointment(AppointmentRequestDto dto, Long patientUserId) {
-        Doctor doctor = doctorRepository.findById(dto.getDoctorId())
+        Users doctor = usersRepository.findById(dto.getDoctorId())
             .orElseThrow(() -> new EntityNotFoundException("Doctor not found: " + dto.getDoctorId()));
-        if (doctor.getStatus() != Doctor.Status.APPROVED) {
+        if (doctor.getDoctor().getStatus() != Doctor.Status.APPROVED) {
             throw new IllegalStateException("Doctor not approved");
         }
         Users patientUser = usersRepository.findById(patientUserId)
@@ -40,7 +39,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             .orElseThrow(() -> new EntityNotFoundException("Patient profile not found"));
 
         Appointment appt = new Appointment();
-        appt.setDoctor(doctor);
+        appt.setDoctor(doctor.getDoctor());
         appt.setPatient(patient);
         appt.setScheduledDateTime(dto.getScheduledDateTime());
         appt.setType(Appointment.Type.valueOf(dto.getType().toUpperCase()));
@@ -78,7 +77,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appt = appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
         if (!appt.getPatient().getUser().getId().equals(patientUserId)) {
-            throw new SecurityException("Not authorized");
+            throw new SecurityException("Not authorized"+patientUserId);
         }
         if (dto.getScheduledDateTime() != null) appt.setScheduledDateTime(dto.getScheduledDateTime());
         if (dto.getType() != null) appt.setType(Appointment.Type.valueOf(dto.getType().toUpperCase()));
